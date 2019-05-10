@@ -396,7 +396,7 @@ export default class extends Component {
     let index = state.index
     if (!this.internals.offset)   // Android not setting this onLayout first? https://github.com/leecade/react-native-swiper/issues/582
       this.internals.offset = {}
-      
+
     const diff = (offset[dir] || 0) - (this.internals.offset[dir] || 0)
     const step = (dir === 'x' ? state.width : state.height) || 0
     let loopJump = false
@@ -464,11 +464,7 @@ export default class extends Component {
     if (state.dir === 'x') x = diff * state.width
     if (state.dir === 'y') y = diff * state.height
 
-    if (Platform.OS !== 'ios') {
-      this.scrollView && this.scrollView[animated ? 'setPage' : 'setPageWithoutAnimation'](diff)
-    } else {
-      this.scrollView && this.scrollView.scrollTo({ x, y, animated })
-    }
+    this.scrollView && this.scrollView.scrollTo({ x, y, animated })
 
     // update scroll state
     this.internals.isScrolling = true
@@ -634,32 +630,19 @@ export default class extends Component {
   }
 
   renderScrollView = pages => {
-    if (Platform.OS === 'ios') {
-      return (
-        <ScrollView ref={this.refScrollView}
-          {...this.props}
-          {...this.scrollViewPropOverrides()}
-          contentContainerStyle={[styles.wrapperIOS, this.props.style]}
-          contentOffset={this.state.offset}
-          onScrollBeginDrag={this.onScrollBegin}
-          onMomentumScrollEnd={this.onScrollEnd}
-          onScrollEndDrag={this.onScrollEndDrag}
-          style={this.props.scrollViewStyle}>
-          {pages}
-        </ScrollView>
-       )
-    }
     return (
-      <ViewPagerAndroid ref={this.refScrollView}
+      <ScrollView ref={this.refScrollView}
         {...this.props}
-        initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
-        onPageScrollStateChanged={this.onPageScrollStateChanged}
-        onPageSelected={this.onScrollEnd}
-        key={pages.length}
-        style={[styles.wrapperAndroid, this.props.style]}>
+        {...this.scrollViewPropOverrides()}
+        contentContainerStyle={[styles.wrapperIOS, this.props.style]}
+        contentOffset={this.state.offset}
+        onScrollBeginDrag={this.onScrollBegin}
+        onMomentumScrollEnd={this.onScrollEnd}
+        onScrollEndDrag={this.onScrollEndDrag}
+        style={this.props.scrollViewStyle}>
         {pages}
-      </ViewPagerAndroid>
-    )
+      </ScrollView>
+     )
   }
 
   /**
