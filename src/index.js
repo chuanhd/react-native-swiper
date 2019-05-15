@@ -7,11 +7,9 @@ import PropTypes from 'prop-types'
 import {
   Text,
   View,
-  ViewPropTypes,
   ScrollView,
   Dimensions,
   TouchableOpacity,
-  ViewPagerAndroid,
   Platform,
   ActivityIndicator
 } from 'react-native'
@@ -194,7 +192,8 @@ export default class extends Component {
 
   componentWillReceiveProps (nextProps) {
     if (!nextProps.autoplay && this.autoplayTimer) clearTimeout(this.autoplayTimer)
-    this.setState(this.initState(nextProps, this.props.index !== nextProps.index))
+    const updateIndex = this.props.index !== nextProps.index || this.props.children.length !== nextProps.children.length
+    this.setState(this.initState(nextProps, updateIndex))
   }
 
   componentDidMount () {
@@ -222,13 +221,6 @@ export default class extends Component {
     }
 
     initState.total = props.children ? props.children.length || 1 : 0
-
-    if (state.total === initState.total && !updateIndex) {
-      // retain the index
-      initState.index = state.index
-    } else {
-      initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0
-    }
 
     // Default: horizontal
     const { width, height } = Dimensions.get('window')
@@ -260,6 +252,29 @@ export default class extends Component {
       ...this.internals,
       isScrolling: false
     };
+
+    if (state.total === initState.total && !updateIndex) {
+      // retain the index
+      initState.index = state.index
+    } else {
+      initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0
+      if (this.internals) {
+        if (initState.dir === 'x' && this.internals.offset && this.internals.offset.x) {
+          if (this.internals.offset.x >= initState.total * initState.width) {
+            const correctOffset = (initState.total - 1) * initState.width
+            this.internals.offset.x = correctOffset >= 0 ? correctOffset : 0
+          }
+          initState.index = Math.floor(this.internals.offset.x / initState.width)
+        } else if (initState.dir === 'y' && this.internals.offset && this.internals.offset.y) {
+          if (this.internals.offset.y >= initState.total * initState.height) {
+            const correctOffset = (initState.total - 1) * initState.height
+            this.internals.offset.y = correctOffset >= 0 ? correctOffset : 0
+          }
+          initState.index = Math.floor(this.internals.offset.y / initState.height)
+        }
+      }
+    }
+
     return initState
   }
 
